@@ -1,14 +1,13 @@
 package slackbot
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
 	"os"
 	"regexp"
 	"strings"
-
-	"bufio"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/nlopes/slack"
@@ -34,7 +33,11 @@ type Config struct {
 	Offline bool
 }
 
-func New(token string, conf Config) *Bot {
+func New(token string, conf Config) (*Bot, error) {
+	if token == "" {
+		return nil, errors.New("token cannot be empty")
+	}
+
 	client := slack.New(token)
 	logger := logrus.New()
 
@@ -46,7 +49,7 @@ func New(token string, conf Config) *Bot {
 		actions: make(map[*regexp.Regexp]Action),
 	}
 
-	return bot
+	return bot, nil
 }
 
 func (bot *Bot) Start() error {
@@ -148,7 +151,10 @@ func (bot *Bot) handleMsg(msg *slack.Msg) {
 			return
 		}
 	}
-	bot.defact(bot, msg)
+
+	if bot.defact != nil {
+		bot.defact(bot, msg)
+	}
 }
 
 func (bot *Bot) cleanupMsg(msg string) string {
