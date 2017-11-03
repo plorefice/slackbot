@@ -171,11 +171,17 @@ func (fb *FlowBuilder) Build(initialState string) *Flow {
 }
 
 func (f *Flow) step(ev *slack.MessageEvent) {
-	if f.ctx.currentState.act != nil {
-		handled := f.ctx.currentState.act(f.bot, &ev.Msg, f.ctx.userCtx)
+	cs := f.ctx.currentState
 
-		if handled {
-			f.ctx.currentState = f.states[f.ctx.currentState.dst]
+	if cs.act != nil {
+		if handled := cs.act(f.bot, &ev.Msg, f.ctx.userCtx); !handled {
+			return
+		}
+
+		if ds, ok := f.states[cs.dst]; !ok {
+			f.bot.activeFlows[ev.User] = nil
+		} else {
+			f.ctx.currentState = ds
 		}
 	}
 }
