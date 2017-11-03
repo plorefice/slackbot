@@ -63,7 +63,7 @@ type Flow struct {
 	name         string
 	states       map[string]*State
 	initialState *State
-	userCtxTmpl  interface{}
+	userCtxTmpl  reflect.Type
 
 	guard  Guard
 	filter Filterer
@@ -115,7 +115,8 @@ func NewFlowWithContext(name string, ctx interface{}) *FlowBuilder {
 	return &FlowBuilder{
 		flow: &Flow{
 			name:        name,
-			userCtxTmpl: ctx,
+			states:      make(map[string]*State),
+			userCtxTmpl: reflect.Indirect(reflect.ValueOf(ctx)).Type(),
 		},
 	}
 }
@@ -193,7 +194,7 @@ func (f *Flow) dup() *Flow {
 	nf.ctx.currentState = f.initialState
 
 	if nf.userCtxTmpl != nil {
-		nf.ctx.userCtx = reflect.New(reflect.TypeOf(nf.userCtxTmpl)).Interface()
+		nf.ctx.userCtx = reflect.New(nf.userCtxTmpl).Interface()
 	}
 
 	return nf
