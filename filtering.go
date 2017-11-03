@@ -12,7 +12,7 @@ type Filterer interface {
 
 type dmfilter struct{}
 
-func (f *dmfilter) filter(msg *slack.Msg) bool {
+func (f dmfilter) filter(msg *slack.Msg) bool {
 	return msg.Type == "message" &&
 		(msg.SubType != "message_deleted" && msg.SubType != "bot_message") &&
 		strings.HasPrefix(msg.Channel, "D")
