@@ -6,42 +6,27 @@ import (
 	"github.com/nlopes/slack"
 )
 
-type filterer interface {
+type Filterer interface {
 	filter(msg *slack.Msg) bool
 }
 
-type multiFilter struct {
-	filters []filterer
-}
+type dmfilter struct{}
 
-type directFilter struct {
-	id string
-}
-
-func newDirectFilter(id string) *directFilter {
-	return &directFilter{
-		id: id,
-	}
-}
-
-func (f *directFilter) filter(msg *slack.Msg) bool {
+func (f *dmfilter) filter(msg *slack.Msg) bool {
 	return msg.Type == "message" &&
 		(msg.SubType != "message_deleted" && msg.SubType != "bot_message") &&
-		msg.User != f.id &&
-		(strings.HasPrefix(msg.Text, "<@"+f.id+">") || strings.HasPrefix(msg.Channel, "D"))
+		strings.HasPrefix(msg.Channel, "D")
 }
 
-func newMultiFilter(filters ...filterer) *multiFilter {
-	return &multiFilter{
-		filters: filters,
-	}
+var DMFilter = dmfilter{}
+
+type SingleUserFilter struct {
+	ID string
 }
 
-func (f *multiFilter) filter(msg *slack.Msg) bool {
-	for _, filter := range f.filters {
-		if !filter.filter(msg) {
-			return false
-		}
-	}
-	return true
+func (f SingleUserFilter) filter(msg *slack.Msg) bool {
+	return msg.Type == "message" &&
+		(msg.SubType != "message_deleted" && msg.SubType != "bot_message") &&
+		msg.User != f.ID &&
+		(strings.HasPrefix(msg.Text, "<@"+f.ID+">") || strings.HasPrefix(msg.Channel, "D"))
 }
