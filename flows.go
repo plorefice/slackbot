@@ -88,7 +88,7 @@ func (bot *Bot) RegisterFlow(f *Flow) error {
 }
 
 func (bot *Bot) findFlow(ev *slack.MessageEvent) *Flow {
-	if f, ok := bot.activeFlows[ev.User]; ok {
+	if f, ok := bot.activeFlows[ev.User]; ok && f != nil {
 		return f
 	}
 
