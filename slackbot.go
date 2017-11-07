@@ -28,7 +28,7 @@ type Bot struct {
 	actions map[*regexp.Regexp]Action
 	defact  SimpleAction
 
-	registeredFlows map[string]*Flow
+	registeredFlows []*Flow
 	activeFlows     map[string]*Flow
 }
 
@@ -50,7 +50,7 @@ func New(token string, conf Config) (*Bot, error) {
 		rtm:             client.NewRTM(),
 		logger:          logger,
 		actions:         make(map[*regexp.Regexp]Action),
-		registeredFlows: make(map[string]*Flow),
+		registeredFlows: make([]*Flow, 0),
 		activeFlows:     make(map[string]*Flow),
 	}
 
@@ -129,7 +129,7 @@ func (bot *Bot) startRTM() error {
 		case *slack.MessageEvent:
 			if filter.filter(&ev.Msg) {
 				if f := bot.findFlow(ev); f != nil {
-					f.step(ev)
+					f.step(bot, ev)
 				} else {
 					log.Debugf("Message: %v\n", ev)
 					bot.handleMsg(&ev.Msg)
