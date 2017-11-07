@@ -112,11 +112,19 @@ func NewFlow(name string) *FlowBuilder {
 // NewFlowWithContext creates a new flow using ctx as the type template for
 // allocating each flow instance's user context.
 func NewFlowWithContext(name string, ctx interface{}) *FlowBuilder {
+	var ctxType reflect.Type
+
+	if ctx != nil {
+		ctxType = reflect.Indirect(reflect.ValueOf(ctx)).Type()
+	} else {
+		ctxType = reflect.TypeOf(ctx)
+	}
+
 	return &FlowBuilder{
 		flow: &Flow{
 			name:        name,
 			states:      make(map[string]*State),
-			userCtxTmpl: reflect.Indirect(reflect.ValueOf(ctx)).Type(),
+			userCtxTmpl: ctxType,
 		},
 	}
 }
