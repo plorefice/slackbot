@@ -11,20 +11,31 @@ type InteractiveElement interface {
 }
 
 type MessageButton struct {
-	Name  string
-	Text  string
-	Value string
+	name  string
+	text  string
+	value string
+}
+
+func NewButton(name string, text string, value string) MessageButton {
+	return MessageButton{
+		name:  name,
+		text:  text,
+		value: value,
+	}
 }
 
 type MessageMenu struct {
-	Name   string
-	Text   string
-	Values map[string]string
+	name   string
+	text   string
+	values map[string]string
 }
 
-type MessageFormat struct {
-	Callback string
-	Elements []InteractiveElement
+func NewMenu(name string, text string, entries map[string]string) MessageMenu {
+	return MessageMenu{
+		name:   name,
+		text:   text,
+		values: entries,
+	}
 }
 
 func (bot *Bot) Message(channel string, msg string) {
@@ -35,7 +46,7 @@ func (bot *Bot) Message(channel string, msg string) {
 	}
 }
 
-func (bot *Bot) InteractiveMessage(channel string, text string, msg MessageFormat) {
+func (bot *Bot) InteractiveMessage(channel string, text string, callback string, elems []InteractiveElement) {
 	if bot.config.Offline {
 		fmt.Println("# interactive messages not supported in offline mode")
 		return
@@ -45,11 +56,11 @@ func (bot *Bot) InteractiveMessage(channel string, text string, msg MessageForma
 
 	attch := slack.Attachment{
 		Fallback:   text,
-		CallbackID: msg.Callback,
-		Actions:    make([]slack.AttachmentAction, len(msg.Elements)),
+		CallbackID: callback,
+		Actions:    make([]slack.AttachmentAction, len(elems)),
 	}
 
-	for i, e := range msg.Elements {
+	for i, e := range elems {
 		attch.Actions[i] = e.toAction()
 	}
 
@@ -60,16 +71,16 @@ func (bot *Bot) InteractiveMessage(channel string, text string, msg MessageForma
 
 func (mb MessageButton) toAction() slack.AttachmentAction {
 	return slack.AttachmentAction{
-		Name:  mb.Name,
-		Text:  mb.Text,
+		Name:  mb.name,
+		Text:  mb.text,
 		Type:  "button",
-		Value: mb.Value,
+		Value: mb.value,
 	}
 }
 
 func (mm MessageMenu) toAction() slack.AttachmentAction {
-	opts := make([]slack.AttachmentActionOption, 0, len(mm.Values))
-	for value, name := range mm.Values {
+	opts := make([]slack.AttachmentActionOption, 0, len(mm.values))
+	for value, name := range mm.values {
 		opts = append(opts, slack.AttachmentActionOption{
 			Value: value,
 			Text:  name,
@@ -77,8 +88,8 @@ func (mm MessageMenu) toAction() slack.AttachmentAction {
 	}
 
 	return slack.AttachmentAction{
-		Name:    mm.Name,
-		Text:    mm.Text,
+		Name:    mm.name,
+		Text:    mm.text,
 		Type:    "select",
 		Options: opts,
 	}
