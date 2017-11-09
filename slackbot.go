@@ -73,14 +73,6 @@ func (bot *Bot) DefaultResponse(action SimpleAction) {
 	bot.defact = action
 }
 
-func (bot *Bot) Message(channel string, msg string) {
-	if bot.config.Offline {
-		fmt.Printf("< %s\n", msg)
-	} else {
-		bot.client.PostMessage(channel, msg, slack.NewPostMessageParameters())
-	}
-}
-
 func (bot *Bot) startLocal() error {
 	log := bot.logger
 	br := bufio.NewReader(os.Stdin)
